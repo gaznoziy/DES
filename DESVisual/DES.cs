@@ -361,15 +361,8 @@ namespace DESVisual
         {
             var result = String.Empty;
 
-            if (value == 1)
-            {
-                result += bits + "0";
-                result = result.Substring(1);
-                return result;
-            }
-
-            result += bits + "00";
-            result = result.Substring(2);
+            var bitsCut = bits.Substring(0, value);
+            result += bits.Substring(value) + bitsCut;
 
             return result;
         }
