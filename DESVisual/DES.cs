@@ -157,10 +157,24 @@ namespace DESVisual
         private string[] TextBlocks;
         private string[] Keys = new string[16];
         private List<char> crypted;
+        private List<double> entropies;
 
         public DES()
         {
             crypted = new List<char>();
+            entropies = new List<double>();
+        }
+
+        private double CoutnEntropy(string block)
+        {
+            var onesCount = block.Count(x => x.Equals('1'));
+
+            double onesProbability = (double)onesCount / block.Length;
+            double zeroProbability = 1 - onesProbability;
+
+            var entropy = -1 * (onesProbability * Math.Log(onesProbability, 2) + zeroProbability * Math.Log(zeroProbability, 2));
+
+            return Math.Round(entropy, 4);
         }
 
         public string Encrypt(string text, string key)
@@ -174,7 +188,6 @@ namespace DESVisual
             key = ExtendKeyUnevenBits(key);
 
             GenerateKeys(key);
-
             for (int i = 0; i < TextBlocks.Length; ++i)
             {
                 var block = EncryptBlock(TextBlocks[i]);
@@ -262,6 +275,7 @@ namespace DESVisual
 
         private string EncryptBlock(string block)
         {
+            entropies.Clear();
             block = Permut(block, IPTable);
 
             var left = block.Substring(0, 32);
@@ -269,6 +283,7 @@ namespace DESVisual
 
             for (int i = 0; i < 16; ++i)
             {
+                entropies.Add(CoutnEntropy(left + right));
                 var nextRight = XOR(left, f(right, Keys[i]));
                 left = right;
                 right = nextRight;
@@ -276,6 +291,14 @@ namespace DESVisual
 
             var result = left + right;
             result = Permut(result, IPReversedTable);
+
+            entropies.Add(CoutnEntropy(result));
+
+            Console.WriteLine("Entropy measures:");
+            for (int i = 0; i < 17; ++i)
+            {
+                Console.WriteLine($"Iteration number {i + 1}: {entropies[i]}");
+            }
 
             return result;
         }
